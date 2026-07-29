@@ -49,6 +49,9 @@ export class AnthropicSynthesisProvider implements SynthesisProvider {
           body: JSON.stringify({
             model: this.opts.model,
             max_tokens: this.opts.maxTokens,
+            // 확장 사고(thinking) 비활성화 — 사고에 토큰을 소진해 본문(JSON)이
+            // 비는 문제(stop=max_tokens, 빈 응답)를 막는다.
+            thinking: { type: "disabled" },
             system,
             messages: [
               { role: "user", content: user },
