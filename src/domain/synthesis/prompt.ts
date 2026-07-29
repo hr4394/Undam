@@ -112,5 +112,7 @@ export function buildUserPrompt(input: SynthesisInput): string {
     "핵심 통찰(coreInsights)은 정확히 4개, 각 insight는 3~4문장으로 채우세요. 각 통찰의 근거(sajuEvidence/astrologyEvidence)도 반드시 함께 담으세요(화면에는 안 보여도 데이터로 필요).",
     "요약·일과 돈·관계·스트레스 항목도 각각 여러 문장으로 채우세요.",
     "그리고 lifeStory(살아온 삶의 흐름)를 반드시 포함하세요 — 유년기부터 지금까지 성향이 어떻게 자라왔는지 4~5문장의 부드러운 서사로.",
+    "",
+    "출력 형식(엄수): 인사말·설명·해설·코드블록(```) 없이, 오직 JSON 객체 하나만 출력하세요. 응답의 첫 글자는 반드시 '{' 여야 하고 마지막 글자는 '}' 여야 합니다.",
   ].join("\n");
 }

@@ -62,11 +62,16 @@ export class AnthropicSynthesisProvider implements SynthesisProvider {
           throw new Error(`Anthropic API ${res.status}: ${await res.text()}`);
         }
         const data = (await res.json()) as {
-          content: { type: string; text: string }[];
+          content: { type: string; text?: string }[];
+          stop_reason?: string;
           usage?: { input_tokens: number; output_tokens: number };
         };
-        const raw = data.content?.map((c) => c.text).join("") ?? "";
-        const json = extractJson(raw);
+        const raw = (data.content ?? [])
+          .filter((c) => c.type === "text")
+          .map((c) => c.text ?? "")
+          .join("")
+          .trim();
+        const json = extractJson(raw, data.stop_reason);
         const parsed = synthesisSchema.parse(json);
 
         const price = PRICE_PER_MTOK.default;
@@ -97,9 +102,17 @@ export class AnthropicSynthesisProvider implements SynthesisProvider {
   }
 }
 
-function extractJson(raw: string): unknown {
-  const first = raw.indexOf("{");
-  const last = raw.lastIndexOf("}");
-  if (first === -1 || last === -1) throw new Error("JSON 응답을 찾을 수 없습니다.");
-  return JSON.parse(raw.slice(first, last + 1));
+function extractJson(raw: string, stopReason?: string): unknown {
+  let text = raw.trim();
+  // ```json ... ``` 코드펜스가 있으면 내부만 추출
+  const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fence) text = fence[1].trim();
+  const first = text.indexOf("{");
+  const last = text.lastIndexOf("}");
+  if (first === -1 || last === -1) {
+    throw new Error(
+      `JSON 응답을 찾을 수 없습니다 (stop=${stopReason ?? "?"}, 길이=${raw.length}). 응답 앞부분: "${raw.slice(0, 300)}"`,
+    );
+  }
+  return JSON.parse(text.slice(first, last + 1));
 }
