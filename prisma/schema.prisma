@@ -1,0 +1,277 @@
+// 운담 데이터 모델 (PostgreSQL + Prisma)
+// 운영 환경은 이 스키마 + PrismaStore 를 사용한다.
+// 로컬/데모는 DATABASE_URL 미설정 시 파일 기반 MemoryStore 로 자동 대체된다.
+//
+// 원칙:
+// - 금액은 정수(원)로 저장
+// - 접근 토큰은 해시로 저장(원문 미저장)
+// - 이름/생년월일/출생장소는 로그에 남기지 않음(민감정보)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OrderStatus {
+  pending // 주문 생성, 결제 전
+  paid // 결제 완료
+  fulfilled // 리포트 생성 완료
+  failed // 결제 성공 후 생성 실패(복구 대상)
+  refunded // 환불됨
+  canceled // 취소
+}
+
+enum ReportStatus {
+  pending
+  generating
+  completed
+  failed
+  refunded
+}
+
+enum PaymentStatus {
+  ready
+  approved
+  canceled
+  failed
+}
+
+enum ConsentType {
+  service // 필수: 서비스 이용약관
+  privacy // 필수: 개인정보 처리
+  age // 필수: 연령 확인
+  marketing // 선택: 마케팅(기본 미체크)
+}
+
+model Product {
+  id          String   @id
+  name        String
+  amount      Int // 원(정수)
+  credits     Int
+  active      Boolean  @default(true)
+  description String
+  createdAt   DateTime @default(now())
+  orders      Order[]
+}
+
+model GuestIdentity {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  profiles  PersonProfile[]
+  wallet    GuestWallet?
+}
+
+model PersonProfile {
+  id         String   @id @default(cuid())
+  guestId    String
+  guest      GuestIdentity @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  nickname   String
+  gender     String
+  createdAt  DateTime @default(now())
+  birth      BirthProfile?
+  reports    SynthesisReport[]
+}
+
+model BirthProfile {
+  id             String   @id @default(cuid())
+  profileId      String   @unique
+  profile        PersonProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  // 민감정보 — 로그 금지
+  calendar       String
+  isLeapMonth    Boolean
+  year           Int
+  month          Int
+  day            Int
+  hour           Int?
+  minute         Int?
+  birthTimeUnknown Boolean
+  countryCode    String
+  cityId         String
+  // 정규화 결과
+  latitude       Float
+  longitude      Float
+  timezone       String
+  interests      String[]
+  concernText    String?
+  tone           String
+  createdAt      DateTime @default(now())
+  saju           SajuCalculation?
+  astrology      AstrologyCalculation?
+}
+
+model SajuCalculation {
+  id            String   @id @default(cuid())
+  birthId       String   @unique
+  birth         BirthProfile @relation(fields: [birthId], references: [id], onDelete: Cascade)
+  engine        String
+  engineVersion String
+  resultJson    Json
+  resultHash    String
+  createdAt     DateTime @default(now())
+}
+
+model AstrologyCalculation {
+  id            String   @id @default(cuid())
+  birthId       String   @unique
+  birth         BirthProfile @relation(fields: [birthId], references: [id], onDelete: Cascade)
+  engine        String
+  engineVersion String
+  houseSystem   String
+  zodiac        String
+  resultJson    Json
+  resultHash    String
+  createdAt     DateTime @default(now())
+}
+
+model SynthesisReport {
+  id             String   @id @default(cuid())
+  // 관계형 프로필(선택). 런타임 Store 는 무결한 round-trip 을 위해 snapshotJson 을 사용한다.
+  profileId      String?
+  profile        PersonProfile? @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  status         ReportStatus @default(pending)
+  freePreviewJson Json
+  synthesisJson  Json?
+  // Store.ReportRecord 전체 스냅샷(계산/미리보기/해석 포함). 민감정보 — 보존기간 후 파기.
+  snapshotJson   Json
+  // 접근 토큰 해시(O(1) 조회용, 원문 미저장). 상세는 ReportAccessToken/ShareLink 참조.
+  ownerTokenHash String  @unique
+  shareTokenHash String? @unique
+  shareEnabled   Boolean @default(false)
+  deletedAt      DateTime?
+  accuracyGrade  String
+  promptVersion  String?
+  calcVersion    String
+  aiProvider     String?
+  aiModel        String?
+  aiCostKrw      Float?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  order          Order?
+  accessTokens   ReportAccessToken[]
+  shareLinks     ShareLink[]
+  pdfArtifacts   PdfArtifact[]
+}
+
+model Order {
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  reportId    String?  @unique
+  report      SynthesisReport? @relation(fields: [reportId], references: [id])
+  amount      Int // 서버에서 재확인한 금액(원)
+  status      OrderStatus @default(pending)
+  // 중복 결제/처리 방지
+  idempotencyKey String @unique
+  orderTokenHash String @unique // 주문 접근 토큰의 해시(원문 미저장)
+  snapshotJson Json // Store.OrderRecord 스냅샷
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  payment     Payment?
+}
+
+model Payment {
+  id            String   @id @default(cuid())
+  orderId       String   @unique
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  provider      String // mock | toss
+  status        PaymentStatus @default(ready)
+  amount        Int
+  providerPaymentKey String?
+  approvedAt    DateTime?
+  createdAt     DateTime @default(now())
+}
+
+model ReportAccessToken {
+  id         String   @id @default(cuid())
+  reportId   String
+  report     SynthesisReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  // 소유자 토큰 해시(원문 미저장)
+  tokenHash  String   @unique
+  kind       String // owner
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime?
+}
+
+model ShareLink {
+  id         String   @id @default(cuid())
+  reportId   String
+  report     SynthesisReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  tokenHash  String   @unique
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime?
+}
+
+model PdfArtifact {
+  id            String   @id @default(cuid())
+  reportId      String
+  report        SynthesisReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  templateVersion String
+  storagePath   String // 비공개 저장소 경로
+  bytes         Int
+  createdAt     DateTime @default(now())
+}
+
+model ConsentRecord {
+  id         String   @id @default(cuid())
+  reportId   String?
+  type       ConsentType
+  agreed     Boolean
+  createdAt  DateTime @default(now())
+}
+
+model PromptVersion {
+  id        String   @id @default(cuid())
+  version   String   @unique
+  createdAt DateTime @default(now())
+}
+
+model AiUsage {
+  id           String   @id @default(cuid())
+  reportId     String?
+  provider     String
+  model        String
+  inputTokens  Int
+  outputTokens Int
+  costKrw      Float
+  latencyMs    Int
+  createdAt    DateTime @default(now())
+}
+
+model EmailDelivery {
+  id         String   @id @default(cuid())
+  reportId   String?
+  email      String
+  purpose    String // link | receipt
+  status     String
+  createdAt  DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  meta      Json?
+  createdAt DateTime @default(now())
+}
+
+// 이용권(크레딧) 활성화 시 사용
+model GuestWallet {
+  id        String   @id @default(cuid())
+  guestId   String   @unique
+  guest     GuestIdentity @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  balance   Int      @default(0)
+  updatedAt DateTime @updatedAt
+  ledger    CreditLedger[]
+}
+
+model CreditLedger {
+  id        String   @id @default(cuid())
+  walletId  String
+  wallet    GuestWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  delta     Int // +지급 / -차감
+  reason    String
+  createdAt DateTime @default(now())
+}

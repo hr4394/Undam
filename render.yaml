@@ -1,0 +1,65 @@
+# 운담 · Render Blueprint
+# Render 대시보드 → "New +" → "Blueprint" → 이 저장소 선택 시 아래가 자동 생성됩니다.
+# - PostgreSQL(무료) + Docker 웹 서비스
+# - DATABASE_URL, USE_PRISMA_STORE 등은 자동 연결
+# - sync:false 항목만 대시보드에서 직접 입력하면 됩니다.
+
+databases:
+  - name: undam-db
+    plan: free
+    databaseName: undam
+    user: undam
+
+services:
+  - type: web
+    name: undam
+    runtime: docker
+    plan: free
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      # ── DB (자동 연결) ──
+      - key: DATABASE_URL
+        fromDatabase:
+          name: undam-db
+          property: connectionString
+      - key: USE_PRISMA_STORE
+        value: "true"
+      - key: NODE_ENV
+        value: production
+
+      # ── 자동 생성 시크릿 (입력 불필요) ──
+      - key: TOKEN_HASH_SECRET
+        generateValue: true
+
+      # ── 직접 입력 (대시보드에서) ──
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: NEXT_PUBLIC_TOSS_CLIENT_KEY   # Toss 테스트 클라이언트 키
+        sync: false
+      - key: TOSS_SECRET_KEY               # Toss 테스트 시크릿 키
+        sync: false
+      - key: NEXT_PUBLIC_APP_URL           # 첫 배포 후 render URL 로 설정 (예: https://undam.onrender.com)
+        sync: false
+      - key: NEXT_PUBLIC_CONTACT_EMAIL
+        sync: false
+
+      # ── 기본값 (필요시 변경) ──
+      - key: PAYMENT_PROVIDER
+        value: toss
+      - key: AI_PROVIDER
+        value: mock
+      - key: NEXT_PUBLIC_BRAND_NAME
+        value: 운담
+      - key: PERSONAL_DATA_RETENTION_DAYS
+        value: "180"
+      - key: DRAFT_TTL_MINUTES
+        value: "120"
+      - key: SAJU_USE_TRUE_SOLAR_TIME
+        value: "true"
+      - key: SAJU_DAY_BOUNDARY
+        value: midnight
+      - key: ENABLE_CREDIT_PACKS
+        value: "false"
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
