@@ -46,3 +46,7 @@ next-env.d.ts
 # generated deliverables kept: /samples
 
 !.env.example
+
+# test artifacts
+/test-results
+/playwright-report
