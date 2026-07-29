@@ -47,8 +47,18 @@ services:
         value: "true"
       - key: PAYMENT_PROVIDER
         value: mock
+
+      # ── AI 해석기 ──
+      # mock: 무료(정해진 틀) / anthropic: 유료 API(더 풍부한 글)
+      # 대시보드에서 AI_PROVIDER=anthropic + ANTHROPIC_API_KEY 를 넣으면 바로 전환됨.
       - key: AI_PROVIDER
-        value: mock
+        sync: false        # 미설정 시 mock 으로 동작
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: AI_MODEL
+        value: claude-sonnet-5
+      - key: AI_MAX_OUTPUT_TOKENS
+        value: "8000"
       - key: NEXT_PUBLIC_BRAND_NAME
         value: 운담
       - key: PERSONAL_DATA_RETENTION_DAYS
