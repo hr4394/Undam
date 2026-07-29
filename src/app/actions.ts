@@ -7,11 +7,13 @@ import {
   createReport,
   createOrderForReport,
   confirmPaymentAndGenerate,
+  generateSynthesisForReport,
   enableShare,
   deleteReport,
 } from "@/server/services/report";
 import { getStore } from "@/server/store";
 import { PRIMARY_PRODUCT_ID } from "@/config/products";
+import { siteConfig } from "@/config/site";
 import type { BirthInput } from "@/domain/types";
 
 /** 출생 입력 제출 → 계산 → 무료 미리보기로 이동 */
@@ -24,6 +26,25 @@ export async function submitBirthAction(input: BirthInput): Promise<
   }
   const { ownerToken } = await createReport(parsed.data as BirthInput);
   redirect(`/preview/${ownerToken}`);
+}
+
+/** 무료 모드: 결제 없이 전체 리포트 생성 후 결과 페이지로 이동 */
+export async function openFullReportFreeAction(formData: FormData): Promise<
+  { ok: false; error: string } | never
+> {
+  if (!siteConfig.freeMode) {
+    return { ok: false, error: "무료 모드가 아닙니다." };
+  }
+  const ownerToken = String(formData.get("ownerToken") ?? "");
+  const store = getStore();
+  const report = await store.findReportByOwnerToken(ownerToken);
+  if (!report) redirect("/start");
+  try {
+    await generateSynthesisForReport(report.id);
+  } catch (err) {
+    return { ok: false, error: "리포트 생성에 실패했습니다. 잠시 후 다시 시도해 주세요. (" + String(err) + ")" };
+  }
+  redirect(`/report/${ownerToken}`);
 }
 
 /** 미리보기에서 결제 시작 → 주문 생성 → 결제 페이지로 이동 */

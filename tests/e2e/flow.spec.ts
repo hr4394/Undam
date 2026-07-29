@@ -42,15 +42,10 @@ test("전체 흐름: 입력 → 무료 미리보기 → 결제 → 전체 리포
   await expect(page.getByText("핵심 키워드", { exact: true })).toBeVisible();
   await expectNoHorizontalScroll(page);
 
-  await Promise.all([
-    page.waitForURL(/\/checkout\//),
-    page.getByRole("button", { name: /전체 리포트 열기/ }).click(),
-  ]);
-  await expect(page.getByText(/결제 전 확인/)).toBeVisible();
-
+  // 무료 모드: 결제 없이 전체 리포트로
   await Promise.all([
     page.waitForURL(/\/report\//, { timeout: 60_000 }),
-    page.getByRole("button", { name: /결제하기/ }).click(),
+    page.getByRole("button", { name: /전체 리포트 무료로 보기/ }).click(),
   ]);
   await expect(page.getByRole("heading", { name: "20초 핵심 요약" })).toBeVisible();
   await expectNoHorizontalScroll(page);

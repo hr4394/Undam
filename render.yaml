@@ -37,18 +37,16 @@ services:
       # ── 직접 입력 (대시보드에서) ──
       - key: ADMIN_PASSWORD
         sync: false
-      - key: NEXT_PUBLIC_TOSS_CLIENT_KEY   # Toss 테스트 클라이언트 키
-        sync: false
-      - key: TOSS_SECRET_KEY               # Toss 테스트 시크릿 키
-        sync: false
       - key: NEXT_PUBLIC_APP_URL           # 첫 배포 후 render URL 로 설정 (예: https://undam.onrender.com)
         sync: false
       - key: NEXT_PUBLIC_CONTACT_EMAIL
         sync: false
 
-      # ── 기본값 (필요시 변경) ──
+      # ── 무료 모드 (결제 없음 → Toss/사업자등록 불필요) ──
+      - key: NEXT_PUBLIC_FREE_MODE
+        value: "true"
       - key: PAYMENT_PROVIDER
-        value: toss
+        value: mock
       - key: AI_PROVIDER
         value: mock
       - key: NEXT_PUBLIC_BRAND_NAME

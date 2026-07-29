@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getStore } from "@/server/store";
 import { getPrimaryProduct } from "@/config/products";
+import { siteConfig } from "@/config/site";
 import { startCheckoutAction } from "@/app/actions";
+import { FreeReportButton } from "./FreeReportButton";
 import { AccuracyBadge, DistributionBars, KeywordChips } from "@/components/report-ui";
 import { ACCURACY_LABEL } from "@/domain/accuracy";
 import type { AccuracyGrade } from "@/domain/types";
@@ -63,15 +65,26 @@ export default async function PreviewPage({
           <p style={{ margin: 0, fontSize: 15 }}>{fp.teaser}</p>
         </div>
 
-        {/* 결제 전 고지 */}
+        {/* 고지 */}
         <div className="card" style={{ padding: 16, background: "var(--surface)" }}>
-          <p className="label" style={{ marginBottom: 8 }}>결제 전 확인</p>
+          <p className="label" style={{ marginBottom: 8 }}>안내</p>
           <ul style={{ margin: 0, paddingLeft: 16, fontSize: 13.5, color: "var(--text-secondary)", lineHeight: 1.8 }}>
-            <li>실제 결제금액: <strong style={{ color: "var(--text-primary)" }}>{price}원 (VAT 포함)</strong></li>
-            <li>포함: 전체 종합 리포트 열람 + PDF 다운로드 + 비공개 재접속</li>
-            <li>제공 시점: 결제 완료 즉시 (디지털 콘텐츠)</li>
-            <li>환불: 콘텐츠 특성상 열람 후 환불 제한 — <Link href="/refund">환불정책</Link></li>
-            <li>개인정보: 계산·해석에만 사용 — <Link href="/privacy">처리방침</Link></li>
+            {siteConfig.freeMode ? (
+              <>
+                <li>전체 리포트는 <strong style={{ color: "var(--text-primary)" }}>무료</strong>로 제공됩니다.</li>
+                <li>포함: 전체 종합 리포트 열람 + PDF 다운로드 + 비공개 재접속</li>
+                <li>결과는 자기이해·오락용 참고 자료입니다 — <Link href="/disclaimer">면책 고지</Link></li>
+                <li>개인정보: 계산·해석에만 사용 — <Link href="/privacy">처리방침</Link></li>
+              </>
+            ) : (
+              <>
+                <li>실제 결제금액: <strong style={{ color: "var(--text-primary)" }}>{price}원 (VAT 포함)</strong></li>
+                <li>포함: 전체 종합 리포트 열람 + PDF 다운로드 + 비공개 재접속</li>
+                <li>제공 시점: 결제 완료 즉시 (디지털 콘텐츠)</li>
+                <li>환불: 콘텐츠 특성상 열람 후 환불 제한 — <Link href="/refund">환불정책</Link></li>
+                <li>개인정보: 계산·해석에만 사용 — <Link href="/privacy">처리방침</Link></li>
+              </>
+            )}
           </ul>
         </div>
       </div>
@@ -82,6 +95,8 @@ export default async function PreviewPage({
             <Link href={`/report/${token}`} className="btn btn-gold" style={{ width: "100%" }}>
               전체 리포트 열기
             </Link>
+          ) : siteConfig.freeMode ? (
+            <FreeReportButton ownerToken={token} />
           ) : (
             <form action={startCheckoutAction}>
               <input type="hidden" name="ownerToken" value={token} />

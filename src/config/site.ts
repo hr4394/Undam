@@ -17,6 +17,9 @@ export const siteConfig = {
   // 개인정보 보존 기간(일). 서버에서만 신뢰.
   retentionDays: Number(process.env.PERSONAL_DATA_RETENTION_DAYS ?? "180"),
   draftTtlMinutes: Number(process.env.DRAFT_TTL_MINUTES ?? "120"),
+  // 무료 모드: 결제 없이 전체 리포트를 무료로 제공(기본 활성).
+  // 유료로 전환하려면 NEXT_PUBLIC_FREE_MODE="false" 로 설정.
+  freeMode: process.env.NEXT_PUBLIC_FREE_MODE !== "false",
 } as const;
 
 export type SiteConfig = typeof siteConfig;

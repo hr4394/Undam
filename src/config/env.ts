@@ -49,8 +49,12 @@ export function getServerEnv(): ServerEnv {
   }
   cached = parsed.data;
 
-  // 운영 환경에서 mock 결제 차단 (명시적 허용 없으면 금지)
+  // 무료 모드에서는 결제를 사용하지 않으므로 mock 결제 차단 검사를 건너뛴다.
+  const freeMode = process.env.NEXT_PUBLIC_FREE_MODE !== "false";
+
+  // 운영 환경에서 mock 결제 차단 (무료 모드가 아니고, 명시적 허용 없으면 금지)
   if (
+    !freeMode &&
     cached.NODE_ENV === "production" &&
     cached.PAYMENT_PROVIDER === "mock" &&
     !cached.ALLOW_MOCK_PAYMENT_IN_PROD

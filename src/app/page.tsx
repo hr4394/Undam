@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/site-footer";
 export default function LandingPage() {
   const product = getPrimaryProduct();
   const price = product.amount.toLocaleString("ko-KR");
+  const reportLabel = siteConfig.freeMode ? "전체 리포트 무료" : `전체 리포트 ${price}원`;
 
   return (
     <main>
@@ -37,7 +38,7 @@ export default function LandingPage() {
           <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", marginTop: 16, fontSize: 13, opacity: 0.85 }}>
             <span>회원가입 없이 이용</span>
             <span aria-hidden>·</span>
-            <span>전체 리포트 {price}원</span>
+            <span>{reportLabel}</span>
             <span aria-hidden>·</span>
             <span>약 1분 소요</span>
           </div>
@@ -78,7 +79,7 @@ export default function LandingPage() {
             <li>두 체계의 공통점 한 문장 + 전체 목차 미리보기</li>
           </ul>
           <p style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 12, marginBottom: 0 }}>
-            전체 리포트({price}원)는 겉모습과 내면, 일과 돈, 관계, 스트레스와 회복, 오늘부터의 행동까지 이어집니다.
+            {siteConfig.freeMode ? "전체 리포트(무료)는" : `전체 리포트(${price}원)는`} 겉모습과 내면, 일과 돈, 관계, 스트레스와 회복, 오늘부터의 행동까지 이어집니다.
           </p>
         </div>
 

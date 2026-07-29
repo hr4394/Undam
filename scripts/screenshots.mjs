@@ -61,18 +61,10 @@ try {
   await page.waitForLoadState("networkidle");
   await shot(page, "05-preview-free");
 
-  // 결제 시작 → 체크아웃
-  await Promise.all([
-    page.waitForURL(/\/checkout\//, { timeout: 30000 }),
-    page.getByRole("button", { name: /전체 리포트 열기/ }).click(),
-  ]);
-  await page.waitForLoadState("networkidle");
-  await shot(page, "06-checkout");
-
-  // mock 결제 → 리포트
+  // 무료 모드: 전체 리포트 무료로 보기 → 바로 리포트
   await Promise.all([
     page.waitForURL(/\/report\//, { timeout: 60000 }),
-    page.getByRole("button", { name: /결제하기/ }).click(),
+    page.getByRole("button", { name: /전체 리포트 무료로 보기/ }).click(),
   ]);
   await page.waitForLoadState("networkidle");
   await shot(page, "07-report-full");
