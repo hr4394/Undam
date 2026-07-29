@@ -85,14 +85,6 @@ export function FullReport({
                   <p style={{ margin: 0 }}><strong style={{ color: "#2f6b3a" }}>강점</strong> {ci.strength}</p>
                   <p style={{ margin: 0 }}><strong style={{ color: "var(--accent-red)" }}>주의</strong> {ci.caution}</p>
                   <p style={{ margin: 0 }}><strong style={{ color: "var(--secondary)" }}>활용</strong> {ci.action}</p>
-                  <details style={{ marginTop: 6 }}>
-                    <summary style={{ fontSize: 13, color: "var(--text-secondary)", cursor: "pointer" }}>해석 근거 보기</summary>
-                    <div style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 6, lineHeight: 1.7 }}>
-                      <p style={{ margin: 0 }}>사주: {ci.sajuEvidence.join(", ")}</p>
-                      <p style={{ margin: 0 }}>점성술: {ci.astrologyEvidence.join(", ")}</p>
-                      <p style={{ margin: 0 }}>신뢰: {ci.confidence}</p>
-                    </div>
-                  </details>
                 </div>
               )}
             </div>
@@ -189,18 +181,10 @@ export function FullReport({
         </SectionCard>
 
         {!limited && (
-          <SectionCard title="해석 근거 · 정확도와 한계">
-            <p style={{ marginTop: 0, fontSize: 14 }}>
-              <strong>신뢰 수준</strong> · {synthesis.confidence.level} — {synthesis.confidence.reason}
+          <SectionCard title="정확도와 한계">
+            <p style={{ marginTop: 0, fontSize: 14, color: "var(--text-secondary)" }}>
+              {synthesis.confidence.reason}
             </p>
-            <details>
-              <summary style={{ cursor: "pointer", fontSize: 14, color: "var(--text-secondary)" }}>계산 메타데이터</summary>
-              <ul style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 8, paddingLeft: 16, lineHeight: 1.8 }}>
-                <li>사주 엔진: {chart.saju.meta.engine} {chart.saju.meta.engineVersion} · 진태양시 {chart.saju.meta.useTrueSolarTime ? "적용" : "미적용"}</li>
-                <li>점성술: {chart.astrology.meta.zodiac} / {chart.astrology.meta.houseSystem} / {chart.astrology.meta.timezone}</li>
-                <li>정확도 등급: {grade} — {chart.accuracy.reasons.join(", ")}</li>
-              </ul>
-            </details>
             <ul style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 10, paddingLeft: 16, lineHeight: 1.8 }}>
               {synthesis.limitations.map((l, i) => <li key={i}>{l}</li>)}
             </ul>

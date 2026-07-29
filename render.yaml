@@ -58,7 +58,7 @@ services:
       - key: AI_MODEL
         value: claude-sonnet-5
       - key: AI_MAX_OUTPUT_TOKENS
-        value: "8000"
+        value: "12000"
       - key: NEXT_PUBLIC_BRAND_NAME
         value: 운담
       - key: PERSONAL_DATA_RETENTION_DAYS
