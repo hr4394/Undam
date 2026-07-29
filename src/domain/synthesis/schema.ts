@@ -24,6 +24,13 @@ export const synthesisSchema = z.object({
     level: confidenceEnum,
     reason: z.string().min(1).max(600),
   }),
+  // 삶의 큰 흐름(부드러운 서사). 구체적 사건 예언이 아니라 성향의 시기별 테마.
+  lifeStory: z
+    .object({
+      title: z.string().min(1).max(80),
+      narrative: z.string().min(1).max(2000),
+    })
+    .optional(),
   coreInsights: z.array(coreInsightSchema).min(3).max(6),
   workAndMoney: z.object({
     summary: z.string().min(1).max(1600),

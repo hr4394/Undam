@@ -72,6 +72,12 @@ export function FullReport({
           <p style={{ margin: 0 }}>{synthesis.summary}</p>
         </SectionCard>
 
+        {synthesis.lifeStory && (
+          <SectionCard title={synthesis.lifeStory.title}>
+            <p style={{ margin: 0 }}>{synthesis.lifeStory.narrative}</p>
+          </SectionCard>
+        )}
+
         <SectionCard id="nature" title="겉모습과 내면">
           {synthesis.coreInsights.map((ci, i) => (
             <div key={i} style={{ marginBottom: i < synthesis.coreInsights.length - 1 ? 18 : 0 }}>

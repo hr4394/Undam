@@ -85,6 +85,7 @@ export class MockSynthesisProvider implements SynthesisProvider {
     const synthesis: Synthesis = {
       headline: `${el.name}의 기운을 지닌 ${s.astro.sunKo}, 겉과 속이 다른 리듬을 가진 사람`,
       summary: buildSummary(s, el, nick, yinYangPlain, toneClose),
+      lifeStory: buildLifeStory(s, el, nick),
       keywords: buildKeywords(s),
       confidence: { level, reason: buildConfidenceReason(input, level) },
       coreInsights: buildCoreInsights(s, el, level),
@@ -125,6 +126,30 @@ function buildSummary(
     `한편 서양 별자리로 보면, 흔히 아는 생일 별자리(태양)는 ${s.astro.sunKo}, 마음이 편안해지는 방식을 보여주는 별자리(달)는 ${s.astro.moonKo}${s.astro.ascKo ? `, 남에게 처음 비치는 인상(상승궁)은 ${s.astro.ascKo}` : ""}예요. 여기서는 '${astroPlain}'의 색이 강하게 묻어납니다. ` +
     `두 지도는 서로 다른 언어를 쓰지만, 공통적으로 "겉으로 보이는 모습과 실제로 편안해지는 방식이 조금 다르다"는 점을 가리켜요. ${toneClose}`
   );
+}
+
+function buildLifeStory(
+  s: DerivedSignals,
+  el: (typeof ELEMENT_PLAIN)[FiveElement],
+  nick: string,
+): { title: string; narrative: string } {
+  const childhood =
+    s.saju.yinYangBias === "yin"
+      ? "어릴 적엔 나서기보다 한발 물러서서 주변을 관찰하는 아이였을 가능성이 커요. 조용해 보였지만 속으로는 나름의 기준을 세우고 있었을 거예요."
+      : "어릴 적엔 궁금한 게 생기면 먼저 부딪혀보는 편이었을 가능성이 커요. 에너지가 밖으로 향해서, 가만히 있기보다 뭔가를 벌이곤 했을 거예요.";
+  const youth =
+    s.astro.dominantModalityKo === "활동"
+      ? "청년기를 지나며 '일단 시작하고 부딪히며 배우는' 방식이 몸에 뱄고, 그 과정에서 몇 번의 시행착오가 오히려 나만의 감각으로 남았을 거예요."
+      : s.astro.dominantModalityKo === "고정"
+        ? "청년기를 지나며 한번 마음먹은 건 끝까지 붙드는 끈기가 단단해졌고, 그만큼 방향을 바꾸는 일에는 신중해졌을 거예요."
+        : "청년기를 지나며 상황에 맞춰 유연하게 방향을 바꾸는 법을 익혔고, 덕분에 다양한 자리에 잘 적응해왔을 거예요.";
+  const now =
+    `지금의 ${nick}님은, ${el.name}의 기운(${el.strong})을 어느 정도 자기 것으로 다룰 줄 아는 시기에 있는 것으로 보여요. ` +
+    `다만 여전히 겉으로 보이는 모습과 속으로 편안한 방식 사이에서 리듬을 맞추는 중이고, 이 조율이 자연스러워질수록 관계도 일도 한결 가벼워질 거예요.`;
+  return {
+    title: "살아온 삶의 흐름",
+    narrative: `${childhood} ${youth} ${now}`,
+  };
 }
 
 function buildKeywords(s: DerivedSignals): [string, string, string] {
