@@ -31,5 +31,6 @@ RUN npm run build
 
 EXPOSE 3000
 
-# 시작: DB 마이그레이션 → 시드(실패해도 계속) → Next 서버
-CMD ["sh", "-c", "npx prisma migrate deploy && (npm run seed || echo 'seed skipped') && npx next start -H 0.0.0.0 -p ${PORT:-3000}"]
+# 시작: DB가 켜질 때까지 최대 ~90초 재시도하며 마이그레이션 → 시드 → Next 서버
+# (무료 DB 최초 프로비저닝 지연/타이밍으로 인한 P1001 방지. 끝내 실패해도 서버는 기동)
+CMD ["sh", "-c", "for i in $(seq 1 15); do npx prisma migrate deploy && break || { echo \"DB 준비 대기중... ($i/15)\"; sleep 6; }; done; (npm run seed || echo 'seed skipped'); npx next start -H 0.0.0.0 -p ${PORT:-3000}"]
