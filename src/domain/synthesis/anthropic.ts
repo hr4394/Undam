@@ -52,8 +52,6 @@ export class AnthropicSynthesisProvider implements SynthesisProvider {
             system,
             messages: [
               { role: "user", content: user },
-              // JSON 출력을 유도하기 위한 assistant prefill
-              { role: "assistant", content: "{" },
             ],
           }),
           signal: controller.signal,
@@ -67,8 +65,7 @@ export class AnthropicSynthesisProvider implements SynthesisProvider {
           content: { type: string; text: string }[];
           usage?: { input_tokens: number; output_tokens: number };
         };
-        const raw =
-          "{" + (data.content?.map((c) => c.text).join("") ?? "");
+        const raw = data.content?.map((c) => c.text).join("") ?? "";
         const json = extractJson(raw);
         const parsed = synthesisSchema.parse(json);
 
