@@ -63,15 +63,28 @@ export const synthesisSchema = z.object({
     description: z.string().min(1).max(1400),
     integrationAdvice: z.string().min(1).max(1000),
   }),
-  actions: z
-    .array(
-      z.object({
-        period: z.enum(["today", "relationship", "work"]),
-        action: z.string().min(1).max(500),
-      }),
-    )
-    .min(3)
-    .max(8),
+  // actions: 모델이 문자열/문자열배열/객체배열 중 무엇으로 주든 관용적으로 정규화한다.
+  actions: z.preprocess(
+    (val) => {
+      const toItem = (x: unknown) =>
+        typeof x === "string" ? { period: "today", action: x } : x;
+      if (typeof val === "string") return [toItem(val)];
+      if (Array.isArray(val)) return val.map(toItem);
+      return val;
+    },
+    z
+      .array(
+        z.object({
+          period: z
+            .enum(["today", "relationship", "work"])
+            .catch("today")
+            .default("today"),
+          action: z.string().min(1).max(500),
+        }),
+      )
+      .min(1)
+      .max(10),
+  ),
   limitations: z.array(z.string()).min(1).max(8),
 });
 
